@@ -1,0 +1,6 @@
+import 'package:flutter/material.dart';
+import 'auth_controller.dart';
+import '../../core/validators/app_validators.dart';
+import '../../widgets/app_text_field.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+class ForgotPasswordScreen extends ConsumerStatefulWidget{const ForgotPasswordScreen({super.key});@override ConsumerState<ForgotPasswordScreen> createState()=>_ForgotPasswordScreenState();} class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>{final _form=GlobalKey<FormState>();final _email=TextEditingController();@override Widget build(BuildContext context)=>Scaffold(appBar:AppBar(title:const Text('استعادة كلمة المرور')),body:Padding(padding:const EdgeInsets.all(24),child:Form(key:_form,child:Column(children:[AppTextField(controller:_email,label:'البريد الإلكتروني',validator:AppValidators.email),const SizedBox(height:16),FilledButton(onPressed:()async{if(_form.currentState!.validate()){await ref.read(authRepositoryProvider).resetPassword(_email.text.trim());if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('تم إرسال رابط الاستعادة إلى بريدك')));}},child:const Text('إرسال الرابط'))])));@override void dispose(){_email.dispose();super.dispose();}}

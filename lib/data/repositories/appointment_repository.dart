@@ -1,0 +1,3 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../models/appointment_model.dart';
+class AppointmentRepository { AppointmentRepository(this._db); final FirebaseFirestore _db; Stream<List<AppointmentModel>> forAdvisor(String id)=>_db.collection('appointments').where('advisorId',isEqualTo:id).orderBy('startsAt').snapshots().map((s)=>s.docs.map(AppointmentModel.fromFirestore).toList()); Future<void> book(AppointmentModel appointment) async { await _db.runTransaction((tx) async { final ref=_db.collection('appointments').doc(appointment.id); final doc=await tx.get(ref); if(!doc.exists || doc.data()?['status']!='available') throw StateError('الموعد لم يعد متاحًا'); tx.update(ref,appointment.toFirestore()); }); } }

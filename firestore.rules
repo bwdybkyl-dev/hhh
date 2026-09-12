@@ -1,0 +1,17 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function user() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    function isAdmin() { return signedIn() && user().role == 'admin'; }
+    function participant(id) { return signedIn() && request.auth.uid in get(/databases/$(database)/documents/conversations/$(id)).data.participantIds; }
+    match /users/{id} { allow read: if signedIn() && (id == request.auth.uid || isAdmin()); allow create: if signedIn() && id == request.auth.uid; allow update: if signedIn() && (id == request.auth.uid || isAdmin()); }
+    match /students/{id} { allow read, write: if signedIn() && (id == request.auth.uid || isAdmin()); }
+    match /advisors/{id} { allow read: if signedIn(); allow create: if signedIn() && id == request.auth.uid; allow update: if isAdmin() || (id == request.auth.uid && !('status' in request.resource.data.diff(resource.data).affectedKeys())); }
+    match /{collection}/{id} { allow read: if signedIn(); allow write: if isAdmin(); }
+    match /consultations/{id} { allow read: if signedIn() && request.auth.uid in resource.data.participantIds; allow create: if signedIn() && request.auth.uid == request.resource.data.studentId; allow update: if signedIn() && (request.auth.uid in resource.data.participantIds || isAdmin()); }
+    match /appointments/{id} { allow read: if signedIn() && (resource.data.advisorId == request.auth.uid || resource.data.studentId == request.auth.uid || isAdmin()); allow create,update: if signedIn() && (request.auth.uid == request.resource.data.advisorId || isAdmin()); }
+    match /conversations/{id} { allow read: if participant(id); allow create: if signedIn() && request.auth.uid in request.resource.data.participantIds; allow update: if participant(id); match /messages/{messageId} { allow read: if participant(id); allow create: if participant(id) && request.resource.data.senderId == request.auth.uid; allow update: if participant(id); match /reactions/{reactionId} { allow read,write: if participant(id); } } }
+    match /notifications/{id} { allow read,update: if signedIn() && resource.data.userId == request.auth.uid; allow create: if isAdmin(); }
+  }
+}
