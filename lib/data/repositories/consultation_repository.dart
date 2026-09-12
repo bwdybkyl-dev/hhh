@@ -1,0 +1,3 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../models/consultation_model.dart';
+class ConsultationRepository { ConsultationRepository(this._db); final FirebaseFirestore _db; Stream<List<ConsultationModel>> forUser(String id)=>_db.collection('consultations').where('participantIds',arrayContains:id).orderBy('createdAt',descending:true).snapshots().map((s)=>s.docs.map(ConsultationModel.fromFirestore).toList()); Future<void> save(ConsultationModel item)=>_db.collection('consultations').doc(item.id).set({...item.toFirestore(),'participantIds':[item.studentId,item.advisorId]}); Future<void> changeStatus(String id,String status)=>_db.collection('consultations').doc(id).update({'status':status}); }
